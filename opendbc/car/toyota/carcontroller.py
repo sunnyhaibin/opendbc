@@ -1,4 +1,5 @@
 import math
+from openpilot.common.params import Params
 from opendbc.car import Bus, carlog, apply_meas_steer_torque_limits, apply_std_steer_angle_limits, common_fault_avoidance, \
                         make_tester_present_msg, rate_limit, structs, ACCELERATION_DUE_TO_GRAVITY, DT_CTRL
 from opendbc.car.can_definitions import CanData
@@ -43,7 +44,11 @@ RIGHT_BLINDSPOT = b"\x42"
 def get_long_tune(CP, params):
   kiBP = [0.]
   if CP.carFingerprint in TSS2_CAR:
-    kiV = [0.25]
+    if Params().get_bool("ToyotaTSS2Long"):
+      kiBP = [0.,  1.,  5.,   8.,   12.,  20.,  27.]
+      kiV = [0.35, 0.32, 0.22, 0.205, 0.203, 0.17, 0.10]
+    else:
+      kiV = [0.25]
 
   else:
     kiBP = [0., 5., 35.]

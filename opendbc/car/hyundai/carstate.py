@@ -7,8 +7,11 @@ from opendbc.can.can_define import CANDefine
 from opendbc.car import create_button_events, structs
 from opendbc.car.common.conversions import Conversions as CV
 from opendbc.car.hyundai.hyundaicanfd import CanBus
-from opendbc.car.hyundai.values import HyundaiFlags, CAR, DBC, Buttons, CarControllerParams, HyundaiFlagsSP
+from opendbc.car.hyundai.values import HyundaiFlags, CAR, DBC, Buttons, CarControllerParams
 from opendbc.car.interfaces import CarStateBase
+
+from opendbc.sunnypilot.car.hyundai.carstate import CarStateSP
+from opendbc.sunnypilot.car.hyundai.values import HyundaiFlagsSP
 
 ButtonType = structs.CarState.ButtonEvent.Type
 
@@ -20,9 +23,10 @@ BUTTONS_DICT = {Buttons.RES_ACCEL: ButtonType.accelCruise, Buttons.SET_DECEL: Bu
                 Buttons.GAP_DIST: ButtonType.gapAdjustCruise, Buttons.CANCEL: ButtonType.cancel}
 
 
-class CarState(CarStateBase):
+class CarState(CarStateBase, CarStateSP):
   def __init__(self, CP):
     super().__init__(CP)
+    CarStateSP.__init__(self)
     can_define = CANDefine(DBC[CP.carFingerprint]["pt"])
 
     self.cruise_buttons: deque = deque([Buttons.NONE] * PREV_BUTTON_SAMPLES, maxlen=PREV_BUTTON_SAMPLES)
@@ -179,7 +183,7 @@ class CarState(CarStateBase):
     self.main_buttons.extend(cp.vl_all["CLU11"]["CF_Clu_CruiseSwMain"])
 
     prev_alt_button = self.alt_button
-    if self.CP.safetyConfigs[-1].spFlags & HyundaiFlagsSP.HAS_LFA_BUTTON:
+    if self.CP.sunnyParams.flags & HyundaiFlagsSP.HAS_LFA_BUTTON:
       self.alt_button = cp.vl["BCM_PO_11"]["LFA_Pressed"]
 
     ret.buttonEvents = [*create_button_events(self.cruise_buttons[-1], prev_cruise_buttons, BUTTONS_DICT),
@@ -334,7 +338,7 @@ class CarState(CarStateBase):
     else:
       messages.append(("LVR12", 100))
 
-    if CP.safetyConfigs[-1].spFlags & HyundaiFlagsSP.HAS_LFA_BUTTON:
+    if CP.sunnyParams.flags & HyundaiFlagsSP.HAS_LFA_BUTTON:
       messages.append(("BCM_PO_11", 50))
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, 0)

@@ -351,6 +351,8 @@ struct CarControl {
   cruiseControl @4 :CruiseControl;
   hudControl @5 :HUDControl;
 
+  sunnyLiveParams @10 :SunnyLiveParams;
+
   struct Actuators {
     # lateral commands, mutually exclusive
     steer @2: Float32;  # [0.0, 1.0]
@@ -425,13 +427,16 @@ struct CarControl {
     }
   }
 
+  struct SunnyLiveParams {
+    enableMads @0 :Bool;
+  }
+
   gasDEPRECATED @1 :Float32;
   brakeDEPRECATED @2 :Float32;
   steeringTorqueDEPRECATED @3 :Float32;
   madsActive @7 :Bool;
   rollDEPRECATED @8 :Float32;
   pitchDEPRECATED @9 :Float32;
-  actuatorsOutputDEPRECATED @10 :Actuators;
 }
 
 struct CarOutput {
@@ -519,11 +524,13 @@ struct CarParams {
   secOcRequired @75 :Bool;  # Car requires SecOC message authentication to operate
   secOcKeyAvailable @76 :Bool;  # Stored SecOC key loaded from params
 
+  sunnyParams @9 :SunnyParams;  # sunnypilot specific params
+
   struct SafetyConfig {
     safetyModel @0 :SafetyModel;
     safetyParam @3 :UInt16;
     safetyParamDEPRECATED @1 :Int16;
-    spFlags @2 :UInt32;
+    safetyParam2DEPRECATED @2 :UInt32;
   }
 
   struct LateralParams {
@@ -698,6 +705,10 @@ struct CarParams {
     gateway @1;    # Integration at vehicle's CAN gateway
   }
 
+  struct SunnyParams {
+    flags @0 :UInt32;
+  }
+
   enableGasInterceptorDEPRECATED @2 :Bool;
   enableCameraDEPRECATED @4 :Bool;
   enableApgsDEPRECATED @6 :Bool;
@@ -705,7 +716,6 @@ struct CarParams {
   isPandaBlackDEPRECATED @39 :Bool;
   hasStockCameraDEPRECATED @57 :Bool;
   safetyParamDEPRECATED @10 :Int16;
-  safetyModelDEPRECATED @9 :SafetyModel;
   safetyModelPassiveDEPRECATED @42 :SafetyModel = silent;
   minSpeedCanDEPRECATED @51 :Float32;
   communityFeatureDEPRECATED @46: Bool;

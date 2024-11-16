@@ -49,7 +49,7 @@ def create_lkas11(packer, frame, CP, apply_steer, steer_req,
     # FcwOpt_USM 2 = Green car + lanes
     # FcwOpt_USM 1 = White car + lanes
     # FcwOpt_USM 0 = No car + lanes
-    if mads.enabled_toggle:
+    if mads.enable_mads:
       values["CF_Lkas_FcwOpt_USM"] = 2 if mads.lat_active or mads.disengaging else 1
     else:
       values["CF_Lkas_FcwOpt_USM"] = 2 if enabled else 1
@@ -69,7 +69,7 @@ def create_lkas11(packer, frame, CP, apply_steer, steer_req,
     # SysState 1-2 = white car + lanes
     # SysState 3 = green car + lanes, green steering wheel
     # SysState 4 = green car + lanes
-    values["CF_Lkas_LdwsSysState"] = 3 if (mads.lat_active if mads.enabled_toggle else enabled) else 1
+    values["CF_Lkas_LdwsSysState"] = 3 if (mads.lat_active if mads.enable_mads else enabled) else 1
     values["CF_Lkas_LdwsOpt_USM"] = 2  # non-2 changes above SysState definition
 
     # these have no effect
@@ -122,7 +122,7 @@ def create_clu11(packer, frame, clu11, button, CP):
 
 
 def create_lfahda_mfc(packer, enabled, mads):
-  if mads.enabled_toggle:
+  if mads.enable_mads:
     lfa_icon = 2 if mads.lat_active else 3 if mads.disengaging else 1 if mads.paused else 0
   else:
     lfa_icon = 2 if enabled else 0

@@ -1,7 +1,7 @@
 from panda import Panda
 from panda import uds
 from openpilot.common.params import Params
-from opendbc.car import structs, get_safety_config
+from opendbc.car import Bus, structs, get_safety_config
 from opendbc.car.toyota.values import Ecu, CAR, DBC, ToyotaFlags, ToyotaFlagsSP, CarControllerParams, TSS2_CAR, RADAR_ACC_CAR, NO_DSU_CAR, \
                                                   MIN_ACC_SPEED, EPS_SCALE, UNSUPPORTED_DSU_CAR, NO_STOP_TIMER_CAR, ANGLE_CONTROL_CAR
 from opendbc.car.disable_ecu import disable_ecu
@@ -22,7 +22,7 @@ class CarInterface(CarInterfaceBase):
     ret.safetyConfigs[0].safetyParam = EPS_SCALE[candidate]
 
     # BRAKE_MODULE is on a different address for these cars
-    if DBC[candidate]["pt"] == "toyota_new_mc_pt_generated":
+    if DBC[candidate][Bus.pt] == "toyota_new_mc_pt_generated":
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_TOYOTA_ALT_BRAKE
 
     if ret.flags & ToyotaFlags.SECOC.value:
@@ -111,7 +111,7 @@ class CarInterface(CarInterfaceBase):
 
     # No radar dbc for cars without DSU which are not TSS 2.0
     # TODO: make an adas dbc file for dsu-less models
-    ret.radarUnavailable = DBC[candidate]['radar'] is None or candidate in (NO_DSU_CAR - TSS2_CAR)
+    ret.radarUnavailable = Bus.radar not in DBC[candidate] or candidate in (NO_DSU_CAR - TSS2_CAR)
 
     # since we don't yet parse radar on TSS2/TSS-P radar-based ACC cars, gate longitudinal behind experimental toggle
     if candidate in (RADAR_ACC_CAR | NO_DSU_CAR):
@@ -161,7 +161,7 @@ class CarInterface(CarInterfaceBase):
         # Since we compensate for imprecise acceleration in carcontroller, we can be less aggressive with tuning
         # This also prevents unnecessary request windup due to internal car jerk limits
         if ret.flags & ToyotaFlags.RAISED_ACCEL_LIMIT:
-          tune.kiV = [0.25]
+          tune.kiV = [0.0]
     else:
       tune.kiBP = [0., 5., 35.]
       tune.kiV = [3.6, 2.4, 1.5]

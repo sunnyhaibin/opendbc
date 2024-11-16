@@ -1,5 +1,5 @@
 import math
-from opendbc.car import carlog, apply_meas_steer_torque_limits, apply_std_steer_angle_limits, common_fault_avoidance, \
+from opendbc.car import Bus, carlog, apply_meas_steer_torque_limits, apply_std_steer_angle_limits, common_fault_avoidance, \
                         make_tester_present_msg, rate_limit, structs, ACCELERATION_DUE_TO_GRAVITY, DT_CTRL
 from opendbc.car.can_definitions import CanData
 from opendbc.car.common.filter_simple import FirstOrderFilter
@@ -12,6 +12,7 @@ from opendbc.car.toyota.values import CAR, STATIC_DSU_MSGS, NO_STOP_TIMER_CAR, T
                                         UNSUPPORTED_DSU_CAR
 from opendbc.can.packer import CANPacker
 
+Ecu = structs.CarParams.Ecu
 LongCtrlState = structs.CarControl.Actuators.LongControlState
 SteerControlType = structs.CarParams.SteerControlType
 VisualAlert = structs.CarControl.HUDControl.VisualAlert
@@ -39,21 +40,31 @@ LEFT_BLINDSPOT = b"\x41"
 RIGHT_BLINDSPOT = b"\x42"
 
 class CarController(CarControllerBase):
-  def __init__(self, dbc_name, CP):
-    super().__init__(dbc_name, CP)
+  def __init__(self, dbc_names, CP):
+    super().__init__(dbc_names, CP)
     self.params = CarControllerParams(self.CP)
     self.last_steer = 0
     self.last_angle = 0
     self.alert_active = False
     self.last_standstill = False
     self.standstill_req = False
+    self.permit_braking = True
     self.steer_rate_counter = 0
     self.distance_button = 0
 
     self.pcm_accel_compensation = FirstOrderFilter(0, 0.5, DT_CTRL * 3)
-    self.permit_braking = True
 
-    self.packer = CANPacker(dbc_name)
+    # the PCM's reported acceleration request can sometimes mismatch aEgo, close the loop
+    self.pcm_accel_net_offset = FirstOrderFilter(0, 1.0, DT_CTRL * 3)
+
+    # aEgo also often lags behind the PCM request due to physical brake lag which varies by car,
+    # so we error correct on the filtered PCM acceleration request using the actuator delay.
+    # TODO: move the delay into the interface
+    self.pcm_accel_net = FirstOrderFilter(0, self.CP.longitudinalActuatorDelay, DT_CTRL * 3)
+    if not any(fw.ecu == Ecu.hybrid for fw in self.CP.carFw):
+      self.pcm_accel_net.update_alpha(self.CP.longitudinalActuatorDelay + 0.2)
+
+    self.packer = CANPacker(dbc_names[Bus.pt])
     self.accel = 0
     self.prev_accel = 0
 
@@ -207,10 +218,21 @@ class CarController(CarControllerBase):
 
         # For cars where we allow a higher max acceleration of 2.0 m/s^2, compensate for PCM request overshoot and imprecise braking
         if self.CP.flags & ToyotaFlags.RAISED_ACCEL_LIMIT and CC.longActive and not CS.out.cruiseState.standstill:
+          # filter ACCEL_NET so it more closely matches aEgo delay for error correction
+          self.pcm_accel_net.update(CS.pcm_accel_net)
+
+          # Our model of the PCM's acceleration request isn't perfect, so we learn the offset when moving
+          new_pcm_accel_net = CS.pcm_accel_net
+          if stopping or CS.out.standstill:
+            # TODO: check if maintaining the offset from before stopping is beneficial
+            self.pcm_accel_net_offset.x = 0.0
+          else:
+            new_pcm_accel_net -= self.pcm_accel_net_offset.update((self.pcm_accel_net.x - accel_due_to_pitch) - CS.out.aEgo)
+
           # let PCM handle stopping for now
           pcm_accel_compensation = 0.0
           if not stopping:
-            pcm_accel_compensation = 2.0 * (CS.pcm_accel_net - net_acceleration_request)
+            pcm_accel_compensation = 2.0 * (new_pcm_accel_net - net_acceleration_request)
 
           # prevent compensation windup
           pcm_accel_compensation = clip(pcm_accel_compensation, pcm_accel_cmd - self.params.ACCEL_MAX,
@@ -220,13 +242,16 @@ class CarController(CarControllerBase):
 
         else:
           self.pcm_accel_compensation.x = 0.0
+          self.pcm_accel_net_offset.x = 0.0
+          self.pcm_accel_net.x = CS.pcm_accel_net
           self.permit_braking = True
 
         # Along with rate limiting positive jerk above, this greatly improves gas response time
         # Consider the net acceleration request that the PCM should be applying (pitch included)
-        if net_acceleration_request < 0.1 or stopping or not CC.longActive:
+        net_acceleration_request_min = min(actuators.accel + accel_due_to_pitch, net_acceleration_request)
+        if net_acceleration_request_min < 0.1 or stopping or not CC.longActive:
           self.permit_braking = True
-        elif net_acceleration_request > 0.2:
+        elif net_acceleration_request_min > 0.2:
           self.permit_braking = False
 
         pcm_accel_cmd = clip(pcm_accel_cmd, self.params.ACCEL_MIN, self.params.ACCEL_MAX)

@@ -8,7 +8,7 @@ from opendbc.car.hyundai.hyundaicanfd import CanBus
 from opendbc.car.hyundai.values import HyundaiFlags, Buttons, CarControllerParams, CAR
 from opendbc.car.interfaces import CarControllerBase
 
-from opendbc.sunnypilot.car.hyundai.mads import MadsCarController
+from opendbc.sunnypilot.car.hyundai.mads import MadsCarControllerBase
 
 VisualAlert = structs.CarControl.HUDControl.VisualAlert
 LongCtrlState = structs.CarControl.Actuators.LongControlState
@@ -44,10 +44,10 @@ def process_hud_alert(enabled, fingerprint, hud_control):
   return sys_warning, sys_state, left_lane_warning, right_lane_warning
 
 
-class CarController(CarControllerBase, MadsCarController):
+class CarController(CarControllerBase, MadsCarControllerBase):
   def __init__(self, dbc_name, CP):
     super().__init__(dbc_name, CP)
-    MadsCarController.__init__(self)
+    MadsCarControllerBase.__init__(self)
     self.CAN = CanBus(CP)
     self.params = CarControllerParams(CP)
     self.packer = CANPacker(dbc_names[Bus.pt])
@@ -59,7 +59,7 @@ class CarController(CarControllerBase, MadsCarController):
     self.last_button_frame = 0
 
   def update(self, CC, CS, now_nanos):
-    mads = MadsCarController.update(self, CC, self.frame)
+    mads = MadsCarControllerBase.update(self, CC, self.frame)
     actuators = CC.actuators
     hud_control = CC.hudControl
 

@@ -10,6 +10,7 @@ from opendbc.car.hyundai.hyundaicanfd import CanBus
 from opendbc.car.hyundai.values import HyundaiFlags, CAR, DBC, Buttons, CarControllerParams
 from opendbc.car.interfaces import CarStateBase
 
+from opendbc.sunnypilot.car.hyundai.escc import EsccCarStateBase
 from opendbc.sunnypilot.car.hyundai.mads import MadsCarState
 from opendbc.sunnypilot.car.hyundai.values import HyundaiFlagsSP
 
@@ -23,9 +24,10 @@ BUTTONS_DICT = {Buttons.RES_ACCEL: ButtonType.accelCruise, Buttons.SET_DECEL: Bu
                 Buttons.GAP_DIST: ButtonType.gapAdjustCruise, Buttons.CANCEL: ButtonType.cancel}
 
 
-class CarState(CarStateBase, MadsCarState):
+class CarState(CarStateBase, EsccCarStateBase, MadsCarState):
   def __init__(self, CP):
-    super().__init__(CP)
+    CarStateBase.__init__(self, CP)
+    EsccCarStateBase.__init__(self)
     MadsCarState.__init__(self)
     can_define = CANDefine(DBC[CP.carFingerprint][Bus.pt])
 
@@ -394,6 +396,7 @@ class CarState(CarStateBase, MadsCarState):
       pt_messages.append(("TCU12", 100))
     else:
       pt_messages.append(("LVR12", 100))
+
     if CP.sunnypilotFlags & HyundaiFlagsSP.HAS_LFA_BUTTON:
       pt_messages.append(("BCM_PO_11", 50))
 

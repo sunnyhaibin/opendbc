@@ -1,4 +1,3 @@
-from abc import ABC
 from collections import namedtuple
 
 from opendbc.car import DT_CTRL, structs
@@ -10,8 +9,11 @@ MadsDataSP = namedtuple("MadsDataSP",
                         ["enable_mads", "lat_active", "disengaging", "paused"])
 
 
-class MadsCarControllerBase(ABC):
+class MadsCarController:
   def __init__(self):
+    super().__init__()
+    self.mads = MadsDataSP(False, False, False, False)
+
     self.lat_disengage_blink = 0
     self.lat_disengage_init = False
     self.prev_lat_active = False
@@ -35,9 +37,8 @@ class MadsCarControllerBase(ABC):
 
     return MadsDataSP(enable_mads, CC.latActive, disengaging, paused)
 
-  def update(self, CC: structs.CarControl, frame: int) -> MadsDataSP:
-    mads = self.mads_status_update(CC, frame)
-    return mads
+  def update(self, CC: structs.CarControl, frame: int):
+    self.mads = self.mads_status_update(CC, frame)
 
 
 class MadsCarState(MadsCarStateBase):

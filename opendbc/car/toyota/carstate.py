@@ -54,6 +54,7 @@ class CarState(CarStateBase, MadsCarState):
     self.acc_type = 1
     self.lkas_hud = {}
     self.pcm_accel_net = 0.0
+    self.gvc = 0.0
     self.secoc_synchronization = None
 
     self._left_blindspot = False
@@ -77,6 +78,9 @@ class CarState(CarStateBase, MadsCarState):
 
     ret = structs.CarState()
     cp_acc = cp_cam if self.CP.carFingerprint in (TSS2_CAR - RADAR_ACC_CAR) else cp
+
+    if not self.CP.flags & ToyotaFlags.SECOC.value:
+      self.gvc = cp.vl["VSC1S07"]["GVC"]
 
     # Describes the acceleration request from the PCM if on flat ground, may be higher or lower if pitched
     # CLUTCH->ACCEL_NET is only accurate for gas, PCM_CRUISE->ACCEL_NET is only accurate for brake
@@ -300,6 +304,7 @@ class CarState(CarStateBase, MadsCarState):
         ("GAS_PEDAL", 42),
       ]
     else:
+      pt_messages.append(("VSC1S07", 20))
       if CP.carFingerprint not in [CAR.TOYOTA_MIRAI]:
         pt_messages.append(("ENGINE_RPM", 42))
 

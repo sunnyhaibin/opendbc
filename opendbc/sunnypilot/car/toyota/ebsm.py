@@ -1,6 +1,6 @@
 from opendbc.car import structs
 from opendbc.sunnypilot.car.toyota.values import ToyotaFlagsSP
-from opendbc.car.toyota.toyotacan import create_set_bsm_debug_mode, create_bsm_polling_status
+#from opendbc.car.toyota.toyotacan import create_set_bsm_debug_mode, create_bsm_polling_status
 
 LEFT_BLINDSPOT = b"\x41"
 RIGHT_BLINDSPOT = b"\x42"

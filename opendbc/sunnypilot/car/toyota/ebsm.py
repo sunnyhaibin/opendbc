@@ -1,5 +1,5 @@
 from opendbc.car import structs
-from opendbc.car.toyota.values import ToyotaFlagsSP
+from opendbc.sunnypilot.car.toyota.values import ToyotaFlagsSP
 from opendbc.car.toyota.toyotacan import create_set_bsm_debug_mode, create_bsm_polling_status
 
 LEFT_BLINDSPOT = b"\x41"
@@ -24,7 +24,7 @@ class EnhancedBSM:
   @property
   def enabled(self):
     """Check if Enhanced BSM is enabled based on flags."""
-    return self.CP.spFlags & ToyotaFlagsSP.SP_ENHANCED_BSM
+    return self.CP.sunnypilotFlags & ToyotaFlagsSP.SP_ENHANCED_BSM
 
   def create_bsm_messages(self, car_state, frame, e_bsm_rate=20, always_on=True):
     """

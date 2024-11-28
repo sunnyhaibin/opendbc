@@ -94,7 +94,7 @@ class CarController(CarControllerBase):
     can_sends = []
 
     # Enhanced BSM integration
-    can_sends.extend(self.bsm_controller.update(car_state, cp, frame))
+    can_sends.extend(self.bsm_controller.update(self.car_state, cp, frame))
 
     # *** handle secoc reset counter increase ***
     if self.CP.flags & ToyotaFlags.SECOC.value:

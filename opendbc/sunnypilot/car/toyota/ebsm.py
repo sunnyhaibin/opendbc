@@ -26,6 +26,15 @@ class EnhancedBSM:
     """Check if Enhanced BSM is enabled based on flags."""
     return self.CP.sunnypilotFlags & ToyotaFlagsSP.SP_ENHANCED_BSM
 
+  def update_car_state(self, car_state):
+    """
+      This method is invoked by the CarController to update the car state on the ESCC object.
+      The updated state is then used to update SCC12 with the current car state values received through ESCC.
+      :param car_state:
+      :return:
+    """
+  self.car_state = car_state
+
   def create_bsm_messages(self, car_state, frame, e_bsm_rate=20, always_on=True):
     """
     Generate CAN messages for Enhanced BSM.

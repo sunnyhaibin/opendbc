@@ -13,6 +13,8 @@ from opendbc.car.toyota.values import CAR, STATIC_DSU_MSGS, NO_STOP_TIMER_CAR, T
                                         UNSUPPORTED_DSU_CAR
 from opendbc.can.packer import CANPacker
 
+from opendbc.sunnypilot.car.toyota.ebsm import BSMCarController
+
 Ecu = structs.CarParams.Ecu
 LongCtrlState = structs.CarControl.Actuators.LongControlState
 SteerControlType = structs.CarParams.SteerControlType
@@ -49,6 +51,8 @@ class CarController(CarControllerBase):
     self.permit_braking = True
     self.steer_rate_counter = 0
     self.distance_button = 0
+
+    self.bsm_controller = BSMCarController(CP)
 
     self.pitch = FirstOrderFilter(0, 0.5, DT_CTRL)
 
@@ -88,6 +92,9 @@ class CarController(CarControllerBase):
 
     # *** control msgs ***
     can_sends = []
+
+    # Enhanced BSM integration
+    can_sends.extend(self.bsm_controller.update(car_state, cp, frame))
 
     # *** handle secoc reset counter increase ***
     if self.CP.flags & ToyotaFlags.SECOC.value:

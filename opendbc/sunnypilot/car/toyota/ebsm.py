@@ -26,14 +26,13 @@ class EnhancedBSM:
     """Check if Enhanced BSM is enabled based on flags."""
     return self.CP.sunnypilotFlags & ToyotaFlagsSP.SP_ENHANCED_BSM
 
-  def update_car_state(self, car_state):
-    """
-      This method is invoked by the CarController to update the car state on the ESCC object.
-      The updated state is then used to update SCC12 with the current car state values received through ESCC.
-      :param car_state:
-      :return:
-    """
-  self.car_state = car_state
+    def update_car_state(self, car_state):
+      """
+      Update the car state used by Enhanced BSM.
+
+      :param car_state: The updated car state object.
+      """
+      self.car_state = car_state
 
   def create_bsm_messages(self, car_state, frame, e_bsm_rate=20, always_on=True):
     """
@@ -49,7 +48,7 @@ class EnhancedBSM:
 
     # Left Blind Spot Monitoring
     if not self.left_bsm_active:
-      if always_on or car_state.vEgo > 6:
+      if always_on or self.car_state.vEgo > 6:
         can_sends.append(create_set_bsm_debug_mode(LEFT_BLINDSPOT, True))
         self.left_bsm_active = True
     else:
@@ -62,7 +61,7 @@ class EnhancedBSM:
 
     # Right Blind Spot Monitoring
     if not self.right_bsm_active:
-      if always_on or car_state.vEgo > 6:
+      if always_on or self.car_state.vEgo > 6:
         can_sends.append(create_set_bsm_debug_mode(RIGHT_BLINDSPOT, True))
         self.right_bsm_active = True
     else:
@@ -143,6 +142,6 @@ class BSMCarController:
     """
     if self.BSM.enabled:
       self.BSM.update_blindspot_state(cp)
-      car_state.left_bsm_warning, car_state.right_bsm_warning = self.BSM.get_blindspot_warnings()
+      self.car_state.left_bsm_warning, self.car_state.right_bsm_warning = self.BSM.get_blindspot_warnings()
       return self.BSM.create_bsm_messages(car_state, frame)
     return []

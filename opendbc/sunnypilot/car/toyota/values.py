@@ -1,4 +1,5 @@
 from enum import IntFlag
+from opendbc.car import make_can_msg
 
 class ToyotaFlagsSP(IntFlag):
   """

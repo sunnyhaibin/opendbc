@@ -45,8 +45,11 @@ def get_long_tune(CP, params):
   kdBP = [0.]
   kdV = [0.]
   if CP.carFingerprint in TSS2_CAR:
-    kiV = [0.5]
-    kdV = [0.25 / 4]
+    kiBP = [0.,   0.2,   14.,   20.,   27.]
+    kiV = [0.35,  0.35, 0.215,  0.17, 0.10]
+    kdV = [0.25 / 3]
+    #kiV = [0.5]
+    #kdV = [0.25 / 4]
 
     # Since we compensate for imprecise acceleration in carcontroller and error correct on aEgo, we can avoid using gains
     if CP.flags & ToyotaFlags.RAISED_ACCEL_LIMIT:

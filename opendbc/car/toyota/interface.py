@@ -145,9 +145,9 @@ class CarInterface(CarInterfaceBase):
     #sp_tss2_long_tune = Params().get_bool("ToyotaTSS2Long")
 
     if candidate in TSS2_CAR:
-      ret.vEgoStopping = 0.25
-      ret.vEgoStarting = 0.25
-      ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
+      ret.vEgoStopping = 0.20
+      ret.vEgoStarting = 0.10
+      ret.stoppingDecelRate = 0.1  # reach stopping target smoothly
 
     return ret
 

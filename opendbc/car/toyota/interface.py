@@ -145,12 +145,17 @@ class CarInterface(CarInterfaceBase):
     # min speed to enable ACC. if car can do stop and go, then set enabling speed
     # to a negative value, so it won't matter.
     ret.minEnableSpeed = -1. if stop_and_go else MIN_ACC_SPEED
-    #sp_tss2_long_tune = Params().get_bool("ToyotaTSS2Long")
+    sp_tss2_long_tune = Params().get_bool("ToyotaTSS2Long")
 
     if candidate in TSS2_CAR:
-      ret.vEgoStopping = 0.25
-      ret.vEgoStarting = 0.25
-      ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
+      if sp_tss2_long_tune:
+        ret.vEgoStopping = 0.20
+        ret.vEgoStarting = 0.10
+        ret.stoppingDecelRate = 0.1  # reach stopping target smoothly
+      else:
+        ret.vEgoStopping = 0.25
+        ret.vEgoStarting = 0.25
+        ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
 
       # Hybrids have much quicker longitudinal actuator response
       if ret.flags & ToyotaFlags.HYBRID.value:

@@ -53,7 +53,7 @@ def get_long_tune(CP, params):
       #kiV = [0.31, 0.31, 0.27, 0.208, 0.208, 0.20, 0.17, 0.10]
       kdV = [0.25 / 3]
     else:
-      kiV = [0.25]
+      kiV = [0.5]
       kdV = [0.25 / 4]
 
   else:

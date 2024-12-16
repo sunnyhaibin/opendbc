@@ -34,17 +34,13 @@ class CanBus(CanBusBase):
     return self._cam
 
 
-def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_steer, mads):
-  if mads.enable_mads:
-    lka_icon = 2 if lat_active else 3 if mads.disengaging else 1 if mads.paused else 0
-  else:
-    lka_icon = 2 if enabled else 1
+def create_steering_messages(packer, CP, CAN, enabled, lat_active, apply_steer, lkas_icon):
 
   ret = []
 
   values = {
     "LKA_MODE": 2,
-    "LKA_ICON": lka_icon,
+    "LKA_ICON": lkas_icon,
     "TORQUE_REQUEST": apply_steer,
     "LKA_ASSIST": 0,
     "STEER_REQ": 1 if lat_active else 0,
@@ -116,12 +112,7 @@ def create_acc_cancel(packer, CP, CAN, cruise_info_copy):
   })
   return packer.make_can_msg("SCC_CONTROL", CAN.ECAN, values)
 
-def create_lfahda_cluster(packer, CAN, enabled, mads):
-  if mads.enable_mads:
-    lfa_icon = 2 if mads.lat_active else 3 if mads.disengaging else 1 if mads.paused else 0
-  else:
-    lfa_icon = 2 if enabled else 0
-
+def create_lfahda_cluster(packer, CAN, enabled, lfa_icon):
   values = {
     "HDA_ICON": 1 if enabled else 0,
     "LFA_ICON": lfa_icon,
@@ -129,8 +120,7 @@ def create_lfahda_cluster(packer, CAN, enabled, mads):
   return packer.make_can_msg("LFAHDA_CLUSTER", CAN.ECAN, values)
 
 
-def create_acc_control(packer, CAN, enabled, accel_last, accel, stopping, gas_override, set_speed, hud_control,
-                       main_cruise_enabled):
+def create_acc_control(packer, CAN, enabled, accel_last, accel, stopping, gas_override, set_speed, hud_control,  main_cruise_enabled):
   jerk = 5
   jn = jerk / 50
   if not enabled or gas_override:

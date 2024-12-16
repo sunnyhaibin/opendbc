@@ -13,7 +13,7 @@ ButtonType = structs.CarState.ButtonEvent.Type
 class CarState(CarStateBase, MadsCarState):
   def __init__(self, CP):
     CarStateBase.__init__(self, CP)
-    MadsCarState.__init__(self)
+    MadsCarState.__init__(self, CP)
     self.CP = CP
     can_define = CANDefine(DBC[CP.carFingerprint][Bus.pt])
 
@@ -107,12 +107,11 @@ class CarState(CarStateBase, MadsCarState):
     self.lkas_car_model = cp_cam.vl["DAS_6"]["CAR_MODEL"]
     self.button_counter = cp.vl["CRUISE_BUTTONS"]["COUNTER"]
 
-    prev_lkas_button = self.lkas_button
-    self.lkas_button = self.get_lkas_button(self.CP, cp, cp_cam)
+    MadsCarState.update_mads(self, ret, can_parsers)
 
     ret.buttonEvents = [
       *create_button_events(self.distance_button, prev_distance_button, {1: ButtonType.gapAdjustCruise}),
-      *create_button_events(self.lkas_button, prev_lkas_button, {1: ButtonType.lkas}),
+      *create_button_events(self.lkas_button, self.prev_lkas_button, {1: ButtonType.lkas}),
     ]
 
     return ret
@@ -148,14 +147,11 @@ class CarState(CarStateBase, MadsCarState):
         ("ESP_8", 50),
         ("EPS_3", 50),
         ("Transmission_Status", 50),
-        ("Center_Stack_1", 1),
-        ("Center_Stack_2", 1),
       ]
     else:
       pt_messages += [
         ("GEAR", 50),
         ("SPEED_1", 100),
-        ("TRACTION_BUTTON", 1),
       ]
       pt_messages += CarState.get_cruise_messages()
 
@@ -165,8 +161,8 @@ class CarState(CarStateBase, MadsCarState):
 
     if CP.carFingerprint in RAM_CARS:
       cam_messages += CarState.get_cruise_messages()
-    else:
-      cam_messages.append(("LKAS_HEARTBIT", 1))
+
+    MadsCarState.get_parser(CP, pt_messages, cam_messages)
 
     return {
       Bus.pt: CANParser(DBC[CP.carFingerprint][Bus.pt], pt_messages, 0),

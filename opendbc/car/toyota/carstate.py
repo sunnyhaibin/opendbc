@@ -12,6 +12,8 @@ from opendbc.car.toyota.values import ToyotaFlags, ToyotaFlagsSP, CAR, DBC, STEE
 
 from opendbc.sunnypilot.car.toyota.mads import MadsCarState
 
+from opendbc.sunnypilot.car.toyota.mads import MadsCarState
+
 ButtonType = structs.CarState.ButtonEvent.Type
 SteerControlType = structs.CarParams.SteerControlType
 
@@ -207,6 +209,13 @@ class CarState(CarStateBase, MadsCarState):
       self.distance_button = cp_acc.vl["ACC_CONTROL"]["DISTANCE"]
 
       self.distance_button_events = create_button_events(self.distance_button, prev_distance_button, {1: ButtonType.gapAdjustCruise})
+
+    MadsCarState.update_mads(self, ret, can_parsers)
+
+    ret.buttonEvents = [
+      *self.distance_button_events,
+      *self.lkas_button_events,
+    ]
 
     MadsCarState.update_mads(self, ret, can_parsers)
 

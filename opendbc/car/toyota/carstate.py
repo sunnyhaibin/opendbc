@@ -334,7 +334,7 @@ class CarState(CarStateBase, MadsCarState):
           ("PRE_COLLISION", 33),
         ]
     if CP.spFlags & ToyotaFlagsSP.SP_AUTO_BRAKE_HOLD:
-      messages.append(("PRE_COLLISION_2", 33))
+      cam_messages.append(("PRE_COLLISION_2", 33))
 
     return {
       Bus.pt: CANParser(DBC[CP.carFingerprint][Bus.pt], pt_messages, 0),

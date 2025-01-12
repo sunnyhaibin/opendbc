@@ -151,8 +151,8 @@ class CarInterface(CarInterfaceBase):
         ret.vEgoStarting = 0.01
         ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
       else:
-        ret.vEgoStopping = 0.15
-        ret.vEgoStarting = 0.10
+        ret.vEgoStopping = 0.25
+        ret.vEgoStarting = 0.25
         ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
 
       # Hybrids have much quicker longitudinal actuator response

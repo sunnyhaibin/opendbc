@@ -1,7 +1,6 @@
 import copy
 import numpy as np
 
-from openpilot.common.params import Params
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from opendbc.car import Bus, DT_CTRL, create_button_events, structs
